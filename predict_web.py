@@ -14,8 +14,8 @@ def predict():
         <h2>사다리 예측 결과</h2>
         <p><strong>예측 회차:</strong> {{ round_num }}회차</p>
         <ol>
-        {% for val in top3 %}
-            <li>{{ val }}</li>
+        {% for combo in top3 %}
+            <li>{{ combo[0][0] }} / {{ combo[0][1] }} / {{ combo[0][2] }}</li>
         {% endfor %}
         </ol>
     """, top3=top3, round_num=round_num)
