@@ -1,31 +1,43 @@
-import pandas as pd
 import os
-import joblib
+import pandas as pd
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.preprocessing import LabelEncoder
+import joblib
 
-def train_failure_model():
-    path = "failures/failures.csv"
-    if not os.path.exists(path):
-        print("오답 데이터가 없습니다.")
+# 시트 데이터 로딩
+from gsheet_handler import get_latest_data
+
+def train_model():
+    data = get_latest_data()
+    if data is None or data.empty:
+        print("❌ 학습할 데이터가 없습니다.")
         return
 
-    df = pd.read_csv(path)
+    # ✅ 주요 컬럼 예시 (자신의 구조에 맞게 수정)
+    feature_columns = ["홀짝", "좌우", "줄수"]  # 입력값 컬럼
+    label_column = "결과"                      # 정답 컬럼
 
-    X = df[["예측_좌우", "예측_줄수", "예측_홀짝"]].astype(str)
-    y = df[["실제_좌우", "실제_줄수", "실제_홀짝"]].astype(str)
+    # ✅ 실패 데이터 로드 및 결합
+    if os.path.exists("failures.csv"):
+        failures = pd.read_csv("failures.csv")
+        failures = failures.rename(columns={"실제값": label_column})
+        for col in feature_columns:
+            if col not in failures.columns:
+                failures[col] = None  # 예시 목적. 실제 패턴 컬럼은 채워야 정확
+        data = pd.concat([data, failures[feature_columns + [label_column]]], ignore_index=True)
+        print(f"📌 오답 데이터 포함: {len(failures)}개")
 
-    # 각각의 라벨을 숫자로 인코딩
-    encoders = [LabelEncoder() for _ in range(3)]
-    X_enc = pd.DataFrame({col: enc.fit_transform(X[col]) for enc, col in zip(encoders, X.columns)})
-    y_enc = pd.DataFrame({col: enc.fit_transform(y[col]) for enc, col in zip(encoders, y.columns)})
+    X = data[feature_columns]
+    y = data[label_column]
+
+    # 결측치 제거 또는 전처리
+    X = X.fillna(0)
 
     model = RandomForestClassifier(n_estimators=100, random_state=42)
-    model.fit(X_enc, y_enc)
+    model.fit(X, y)
 
     os.makedirs("model", exist_ok=True)
-    joblib.dump((model, encoders), "model/model.pkl")
-    print("✅ 모델 학습 완료 및 저장: model/model.pkl")
+    joblib.dump(model, "model/model1.pkl")
+    print("✅ 모델 저장 완료: model/model1.pkl")
 
 if __name__ == "__main__":
-    train_failure_model()
+    train_model()
