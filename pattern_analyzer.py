@@ -20,19 +20,16 @@ def analyze_block(df, column):
     return result_counter
 
 def get_top_predictions(df):
-    col_results = []
+    top_predictions = {}
 
     for col in ["좌우", "줄수", "홀짝"]:
         result = analyze_block(df, col)
-        col_results.append(result)
-
-    # 통합 결과
-    total = sum(col_results, Counter())
-    top3 = [item[0] for item in total.most_common(3)]
+        top1 = result.most_common(1)[0][0] if result else "?"
+        top_predictions[col] = top1
 
     try:
         predict_round = int(df["회차"].iloc[-1]) + 1
     except:
         predict_round = "?"
 
-    return top3, predict_round
+    return top_predictions, predict_round
