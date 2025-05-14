@@ -14,7 +14,7 @@ def train_model():
 
     # ✅ 주요 컬럼 예시 (자신의 구조에 맞게 수정)
     feature_columns = ["홀짝", "좌우", "줄수"]  # 입력값 컬럼
-    label_column = "결과"                      # 정답 컬럼
+    label_column = "좌우"                      # 정답 컬럼
 
     # ✅ 실패 데이터 로드 및 결합
     if os.path.exists("failures.csv"):
