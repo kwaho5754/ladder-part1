@@ -28,7 +28,7 @@ def extract_pattern_block(df, index, size, reverse=False):
     )
 
 def generate_all_patterns(df, min_block=3, max_block=5):
-    pattern_set = set()  # ✅ 중복 제거를 위해 set 사용
+    pattern_set = set()
     for size in range(min_block, max_block + 1):
         for i in range(size - 1, len(df)):
             normal = extract_pattern_block(df, i, size, reverse=False)
@@ -63,12 +63,16 @@ def analyze_patterns(df):
     counter = Counter(next_combos)
     top_10 = counter.most_common(10)
 
-    # ✅ 예측 고정 방지를 위해 상위 10개 중 확률적 3개 추출 (우선순위 기반 샘플링)
+    # ✅ 빈도수 기준 상위 10개 중에서 무작위 3개 추출
     selected = []
+    seen = set()
     for item in top_10:
-        if item[0] not in selected:
+        if item[0] not in seen:
             selected.append(item[0])
-        if len(selected) >= 3:
+            seen.add(item[0])
+        if len(selected) >= 6:  # 후보 6개 정도 확보
             break
 
-    return selected
+    # 랜덤하게 예측값 3개 추출 (단, 예측 시 항상 동일하지 않도록)
+    random.shuffle(selected)
+    return selected[:3]
