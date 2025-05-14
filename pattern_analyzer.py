@@ -1,4 +1,5 @@
 from collections import Counter
+import random
 
 # 좌우, 홀짝 대칭 정의
 def get_mirrored_value(field, value):
@@ -8,7 +9,6 @@ def get_mirrored_value(field, value):
     }
     return mirrors[field].get(value, value)
 
-# ✔ DataFrame을 iterrows로 안전하게 순회하도록 수정
 def extract_pattern_block(df, index, size, reverse=False):
     if reverse:
         block = df.iloc[index:index + size][::-1]
@@ -28,14 +28,14 @@ def extract_pattern_block(df, index, size, reverse=False):
     )
 
 def generate_all_patterns(df, min_block=3, max_block=5):
-    patterns = []
+    pattern_set = set()  # ✅ 중복 제거를 위해 set 사용
     for size in range(min_block, max_block + 1):
         for i in range(size - 1, len(df)):
             normal = extract_pattern_block(df, i, size, reverse=False)
             reverse = extract_pattern_block(df, i - size + 1, size, reverse=True) if i - size + 1 >= 0 else None
-            if normal: patterns.append(normal)
-            if reverse: patterns.append(reverse)
-    return patterns
+            if normal: pattern_set.add(normal)
+            if reverse: pattern_set.add(reverse)
+    return list(pattern_set)
 
 def get_next_combo(block):
     if not block:
@@ -58,8 +58,17 @@ def analyze_patterns(df):
         combo = get_next_combo(pattern)
         if combo:
             next_combos.append(combo)
-            next_combos.append(get_mirrored_combo(combo))  # 대칭 포함
+            next_combos.append(get_mirrored_combo(combo))
 
     counter = Counter(next_combos)
-    top_3 = counter.most_common(3)
-    return [item[0] for item in top_3]
+    top_10 = counter.most_common(10)
+
+    # ✅ 예측 고정 방지를 위해 상위 10개 중 확률적 3개 추출 (우선순위 기반 샘플링)
+    selected = []
+    for item in top_10:
+        if item[0] not in selected:
+            selected.append(item[0])
+        if len(selected) >= 3:
+            break
+
+    return selected
