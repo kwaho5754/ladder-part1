@@ -49,7 +49,7 @@ def predict():
 
     last_row = df.iloc[-1]
     predict_round = int(last_row["회차"]) + 1
-    last_result = last_row["결과"]
+    last_result = last_row["좌우"]  # ✅ 컬럼명 수정: '결과' → '좌우'
 
     cache = load_cache()
     if cache.get("round") == predict_round:
@@ -73,7 +73,7 @@ def predict():
         predicted = predict_with_model(combo)
         formatted = f"{i}. {predicted[0]} / {predicted[1]} / {predicted[2]}"
         predictions.append(formatted)
-        predicted_top3.append(predicted[0])
+        predicted_top3.append(predicted[0])  # 예측 결과 중 좌우값 기준 비교
 
     if last_result not in predicted_top3:
         save_failure(int(last_row["회차"]), last_result, predicted_top3)
