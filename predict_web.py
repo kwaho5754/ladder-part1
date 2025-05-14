@@ -43,9 +43,13 @@ def save_cache(round_number, predictions):
 
 @app.route("/predict")
 def predict():
-    data = get_latest_data()
-    predict_round = data[-1]["회차"] + 1
-    last_result = data[-1]["결과"]
+    df = get_latest_data()
+    if df is None or df.empty:
+        return "<h1>데이터를 불러올 수 없습니다.</h1>"
+
+    last_row = df.iloc[-1]
+    predict_round = int(last_row["회차"]) + 1
+    last_result = last_row["결과"]
 
     cache = load_cache()
     if cache.get("round") == predict_round:
@@ -61,7 +65,7 @@ def predict():
         """
         return html
 
-    top_combos = analyze_patterns(data)
+    top_combos = analyze_patterns(df)
     predictions = []
     predicted_top3 = []
 
@@ -71,9 +75,8 @@ def predict():
         predictions.append(formatted)
         predicted_top3.append(predicted[0])
 
-    # 오답 기록
     if last_result not in predicted_top3:
-        save_failure(data[-1]["회차"], last_result, predicted_top3)
+        save_failure(int(last_row["회차"]), last_result, predicted_top3)
 
     save_cache(predict_round, predictions)
 
