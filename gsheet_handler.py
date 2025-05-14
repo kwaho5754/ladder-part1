@@ -14,7 +14,7 @@ if creds_json is None:
     print("❌ 환경 변수 GOOGLE_SERVICE_ACCOUNT_JSON이 설정되지 않았습니다.")
     exit(1)
 
-# JSON 문자열을 dict로 파싱 (이중 파싱 대응 포함)
+# JSON 문자열을 dict로 변환 (이중 파싱 방어 포함)
 try:
     creds_dict = json.loads(creds_json)
     if isinstance(creds_dict, str):
@@ -49,6 +49,11 @@ def get_latest_data():
             return None
 
         df = pd.DataFrame(data)
+
+        # ✅ 최근 1000줄 기준으로 잘라서 반환
+        if len(df) > 1000:
+            df = df.tail(1000).reset_index(drop=True)
+
         return df
 
     except Exception as e:
