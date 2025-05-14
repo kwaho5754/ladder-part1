@@ -14,7 +14,14 @@ if creds_json is None:
     print("❌ 환경 변수 GOOGLE_SERVICE_ACCOUNT_JSON이 설정되지 않았습니다.")
     exit(1)
 
-creds_dict = json.loads(creds_json)
+# JSON 문자열을 dict로 파싱 (이중 파싱 대응 포함)
+try:
+    creds_dict = json.loads(creds_json)
+    if isinstance(creds_dict, str):
+        creds_dict = json.loads(creds_dict)
+except Exception as e:
+    print("❌ JSON 파싱 중 오류:", e)
+    exit(1)
 
 # 인증 및 시트 접근
 scope = [
@@ -22,8 +29,12 @@ scope = [
     "https://www.googleapis.com/auth/drive.readonly",
 ]
 
-creds = Credentials.from_service_account_info(creds_dict, scopes=scope)
-client = gspread.authorize(creds)
+try:
+    creds = Credentials.from_service_account_info(creds_dict, scopes=scope)
+    client = gspread.authorize(creds)
+except Exception as e:
+    print("❌ Google 인증 중 오류 발생:", e)
+    exit(1)
 
 # 시트 이름
 SPREADSHEET_NAME = "실시간사다리"
